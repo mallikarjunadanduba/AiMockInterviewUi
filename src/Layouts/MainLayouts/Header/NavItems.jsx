@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 const NavItems = () => {
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-            <Link to="/interview" style={{ textDecoration: 'none' }}>
+            <Link to="/" style={{ textDecoration: 'none' }}>
                 <Typography
                     variant="h6"
                     sx={{

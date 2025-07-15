@@ -7,3 +7,23 @@ html, body, #root {
     font-family: 'Roboto', sans-serif;
     background-color: #fff;
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #printable-report,
+  #printable-report * {
+    visibility: visible;
+  }
+
+  #printable-report {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px;         /* Add padding to avoid clipping */
+    box-sizing: border-box;
+  }
+}

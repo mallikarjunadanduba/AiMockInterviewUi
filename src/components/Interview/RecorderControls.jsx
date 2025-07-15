@@ -62,7 +62,7 @@ const RecorderControls = ({ stream, sessionId, questionData, onNext, setResponse
   };
 
   return (
-    <Stack direction="row" spacing={2} mt={2} alignItems="center">
+    <Stack direction="row" spacing={2} alignItems="center">
       {!isRecording ? (
         <Button onClick={startRecording} variant="contained" color="success">
           🎥 Start Recording

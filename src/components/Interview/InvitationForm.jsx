@@ -22,9 +22,9 @@ const InvitationForm = () => {
         Swal.fire({
             title: 'Interview Link Sent',
             html: `
-        <p>An email with the mock interview link has been sent to <strong>${email}</strong>.</p>
-        <p>Please check your inbox and follow the instructions.</p>
-      `,
+                <p>An email with the mock interview link has been sent to <strong>${email}</strong>.</p>
+                <p>Please check your inbox and follow the instructions.</p>
+            `,
             icon: 'success',
             confirmButtonText: 'OK',
         });
@@ -34,7 +34,15 @@ const InvitationForm = () => {
     };
 
     return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 16, px: 2 }}>
+        <Box
+            sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: '100vh',
+                px: 2,
+            }}
+        >
             <Paper
                 elevation={4}
                 sx={{

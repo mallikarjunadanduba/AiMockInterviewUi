@@ -2,18 +2,16 @@ import React, { useEffect, useState, useRef } from 'react';
 import {
     Box,
     Typography,
-    Grid,
     Paper,
     Link as MuiLink,
-    Avatar,
     Stack,
+    Button,
 } from '@mui/material';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import VideoPreview from '../components/Interview/VideoPreview';
 import QuestionDisplay from '../components/Interview/QuestionDisplay';
 import RecorderControls from '../components/Interview/RecorderControls';
 import TranscriptResult from '../components/Interview/TranscriptResult';
-import BotGIF from '../assets/images/logo/bot.gif';
 
 const InterviewSession = () => {
     const { sessionId } = useParams();
@@ -41,7 +39,6 @@ const InterviewSession = () => {
                 ],
             },
         };
-
         setMode(mockData.question_mode);
         setQuestions(mockData.questions);
     }, []);
@@ -55,7 +52,6 @@ const InterviewSession = () => {
                 alert('Could not access webcam/mic: ' + err.message);
             }
         }
-
         initCamera();
     }, []);
 
@@ -78,13 +74,11 @@ const InterviewSession = () => {
             const categories = Object.keys(questions);
             const currentCategory = categories[currentCIndex.current];
             const list = questions[currentCategory];
-
             currentQIndex.current++;
             if (currentQIndex.current >= list.length) {
                 currentCIndex.current++;
                 currentQIndex.current = 0;
             }
-
             if (currentCIndex.current < categories.length) {
                 getPredefinedQuestion();
             } else {
@@ -114,110 +108,129 @@ const InterviewSession = () => {
     return (
         <Box
             sx={{
-                width: {
-                    xs: '93.5%',     // narrower on small screens
-                    sm: '93.5%',
-                    md: '100%',
-                },
-                maxWidth: '1480px',
-                mx: 'auto',
+                width: '100%',
                 minHeight: '100vh',
-                background: `linear-gradient(180deg, rgb(0, 175, 181) 0%, white 50%,rgb(0, 175, 181) 100%)`,
-                p: { xs: 1.5, sm: 3 },
+                background: 'linear-gradient(180deg, rgb(0,175,181) 0%, white 50%, rgb(0,175,181) 100%)',
+                px: { xs: 1.5, sm: 3 },
+                pt: { xs: 10, sm: 10 },
+                pb: 5,
+                boxSizing: 'border-box',
                 display: 'flex',
-                flexDirection: { xs: 'column', md: 'row' },
-                gap: { xs: 1.5, md: 3 },
-                alignItems: 'flex-start',
+                justifyContent: 'center',
+                alignItems: 'center',
             }}
         >
-
-            {/* Left Section: Video + Question */}
             <Box
                 sx={{
-                    flex: 1,
+                    width: '100%',
+                    maxWidth: '1300px',
+                    mx: 'auto',
                     display: 'flex',
-                    flexDirection: 'column',
-                    gap: 1,
-                    minWidth: { xs: '100%', md: '0' },
-                    mt: { xs: 8, md: 8 },
+                    flexDirection: { xs: 'column', md: 'row' },
+                    justifyContent: 'center',
+                    alignItems: 'stretch',
+                    gap: { xs: 3, md: 4 },
                 }}
             >
-                {/* Video Container */}
-                <Paper elevation={3} sx={{ p: 1.5, position: 'relative' }}>
-                    <VideoPreview stream={mediaStream} />
-                    <Box
-                        component="img"
-                        src="https://miro.medium.com/v2/resize:fit:800/1*llqlfqGFKm9klLx_itWNLQ.gif"
-                        alt="Bot"
-                        sx={{
-                            width: { xs: 40, md: 150 },
-                            height: { xs: 40, md: 150 },
-                            position: 'absolute',
-                            bottom: 16,
-                            right: 12,
-                            bgcolor: 'white',
-                            p: 0.5,
-                            boxShadow: 2,
-                        }}
-                    />
-                </Paper>
-
-                <Paper elevation={3} sx={{ p: 2 }}>
-                    {/* Center RecorderControls */}
-                    <Stack alignItems="center" justifyContent="center" direction="row" mb={2}>
-                        <RecorderControls
-                            stream={mediaStream}
-                            sessionId={sessionId}
-                            questionData={questionData}
-                            onNext={loadNextQuestion}
-                            setResponse={setResponse}
-                        />
-                    </Stack>
-
-                    <TranscriptResult response={response} />
-
-                    {reportLink && (
-                        <Stack mt={2} alignItems="center">
-                            <MuiLink href={reportLink} target="_blank" underline="hover">
-                                📄 Download Final Report
-                            </MuiLink>
-                        </Stack>
-                    )}
-                </Paper>
-
-            </Box>
-
-            {/* Right Section: Instructions */}
-            <Box
-                sx={{
-                    flex: 1,
-                    minWidth: { xs: '100%', md: '0' },
-                    mt: { xs: 2, md: 8 },
-                    height: '648px'
-                }}
-            >
+                {/* Left Side */}
                 <Paper
                     elevation={3}
                     sx={{
-                        height: '100%',
+                        flexGrow: 1,
+                        maxWidth: { xs: '90%', md: 580 },
+                        width: '100%',
                         p: 2,
+                        position: 'relative',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
                     }}
                 >
-                    <QuestionDisplay category={questionData.category} question={questionData.text} />
-                    <Typography variant="h6" gutterBottom>📋 Instructions</Typography>
-                    <Typography variant="body2" gutterBottom>
-                        • Ensure webcam & mic are active.<br />
-                        • Click "Next" after answering.<br />
-                        • Final report available at the end.
-                    </Typography>
-                    <Typography variant="h6" mt={2}>🧑 Candidate Info</Typography>
-                    <Typography variant="body2">
-                        Session ID: <strong>{sessionId}</strong><br />
-                        Mode: <strong>{mode}</strong>
-                    </Typography>
+                    <Box sx={{ position: 'relative', mb: 2 }}>
+                        <VideoPreview stream={mediaStream} />
+                        <Box
+                            component="img"
+                            src="https://miro.medium.com/v2/resize:fit:800/1*llqlfqGFKm9klLx_itWNLQ.gif"
+                            alt="Bot"
+                            sx={{
+                                width: { xs: 80, md: 120 },
+                                height: { xs: 80, md: 120 },
+                                position: 'absolute',
+                                bottom: 10,
+                                right: 10,
+                                bgcolor: 'white',
+                                p: 0.5,
+                                boxShadow: 3,
+                                borderRadius: 1,
+                            }}
+                        />
+                    </Box>
+
+                    <RecorderControls
+                        stream={mediaStream}
+                        sessionId={sessionId}
+                        questionData={questionData}
+                        onNext={loadNextQuestion}
+                        setResponse={setResponse}
+                    />
+                </Paper>
+
+                {/* Right Side */}
+                <Paper
+                    elevation={3}
+                    sx={{
+                        flexGrow: 1,
+                        maxWidth: { xs: '88%', md: 580 },
+                        width: '100%',
+                        p: 2.5,
+                        overflowY: 'auto',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                    }}
+                >
+                    <Box>
+                        <QuestionDisplay category={questionData.category} question={questionData.text} />
+                        <TranscriptResult response={response} />
+
+                        {reportLink && (
+                            <Stack mt={2} alignItems="center">
+                                <MuiLink href={reportLink} target="_blank" underline="hover">
+                                    📄 Download Final Report
+                                </MuiLink>
+                            </Stack>
+                        )}
+
+                        <Typography variant="h6" gutterBottom mt={3}>
+                            📋 Instructions
+                        </Typography>
+                        <Typography variant="body2" gutterBottom>
+                            • Ensure webcam & mic are active.<br />
+                            • Click "Next" after answering.<br />
+                            • Final report available at the end.
+                        </Typography>
+
+                        <Typography variant="h6" mt={3}>
+                            🧑 Candidate Info
+                        </Typography>
+                        <Typography variant="body2">
+                            Session ID: <strong>{sessionId}</strong><br />
+                            Mode: <strong>{mode}</strong>
+                        </Typography>
+                    </Box>
+
+                    <Button
+                        component={Link}
+                        to="/finalreport"
+                        variant="contained"
+                        sx={{ mt: 3, alignSelf: 'center' }}
+                    >
+                        FINAL REPORT
+                    </Button>
                 </Paper>
             </Box>
         </Box>
+
     );
 };
 

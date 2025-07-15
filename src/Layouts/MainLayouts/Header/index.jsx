@@ -12,11 +12,13 @@ import {
     ListItemText,
     useTheme,
     useMediaQuery,
+    Button,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoSection from './LogoSection';
 import NavItems from './NavItems';
 import { Link } from 'react-router-dom';
+import { Directions } from '@mui/icons-material';
 
 const Navbar = () => {
     const [open, setOpen] = useState(false);
@@ -36,9 +38,9 @@ const Navbar = () => {
                     boxShadow: 3,
                     borderRadius: '50px',
                     px: 2,
-                    mt: 1,
+                    mt: 2,
                     zIndex: (theme) => theme.zIndex + 1,
-                    width: '100%',
+                    width: '95%',
                     maxWidth: '1450px', // MATCH WIDTH HERE
                     mx: 'auto',
                     left: 0,
@@ -71,7 +73,8 @@ const Navbar = () => {
                 >
                     <List>
                         <ListItem disablePadding>
-                            <ListItemButton>
+                            <ListItemButton component={Link}
+                                to="/">
                                 <ListItemText
                                     primary={
                                         <span>
@@ -84,6 +87,14 @@ const Navbar = () => {
                                 />
                             </ListItemButton>
                         </ListItem>
+                        <Button
+                            component={Link}
+                            to="/interview"
+                            variant="contained"
+                            color="primary"
+                        >
+                            View UI
+                        </Button>
                     </List>
                 </Box>
             </Drawer>
