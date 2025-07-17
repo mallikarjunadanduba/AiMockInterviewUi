@@ -12,25 +12,56 @@ import Swal from 'sweetalert2';
 import ModeToggle from './ModeToggle';
 import { Link } from 'react-router-dom';
 
+import BaseUrl from '../../BaseUrl';
+
 const InvitationForm = () => {
     const [email, setEmail] = useState('');
     const [mode, setMode] = useState('predefined');
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        Swal.fire({
-            title: 'Interview Link Sent',
-            html: `
-                <p>An email with the mock interview link has been sent to <strong>${email}</strong>.</p>
-                <p>Please check your inbox and follow the instructions.</p>
-            `,
-            icon: 'success',
-            confirmButtonText: 'OK',
-        });
+        try {
+            const formData = new FormData();
+            formData.append("email", email);
+            formData.append("question_mode", mode);
+            formData.append("domain", "general"); // Change or dynamically set if needed
 
-        setEmail('');
-        setMode('predefined');
+            const response = await fetch(`${BaseUrl}/create_session`, {
+                method: "POST",
+                body: formData,
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                Swal.fire({
+                    title: 'Interview Link Sent',
+                    html: `
+                    <p>An email with the mock interview link has been sent to <strong>${email}</strong>.</p>
+                    <p>Or click below to open it directly.</p>
+                    <a href="${data.link}" target="_blank">${data.link}</a>
+                `,
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                });
+
+                setEmail('');
+                setMode('predefined');
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: data.error || 'Something went wrong!',
+                    icon: 'error',
+                });
+            }
+        } catch (error) {
+            Swal.fire({
+                title: 'Error',
+                text: error.message || 'Network error occurred.',
+                icon: 'error',
+            });
+        }
     };
 
     return (
@@ -39,7 +70,14 @@ const InvitationForm = () => {
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                minHeight: '100vh',
+                minHeight: {
+                    xs: '80%',      // for mobile view
+                    sm: '100vh'      // for tablets and above
+                },
+                py: {
+                    xs: 6,           // vertical padding for spacing in mobile
+                    sm: 0
+                },
                 px: 2,
             }}
         >
@@ -60,6 +98,11 @@ const InvitationForm = () => {
                         fontWeight: 700,
                         mb: 2,
                         textAlign: 'center',
+                        fontSize: {
+                            xs: '1.2rem', // mobile
+                            sm: '2rem',   // tablets
+                            md: '2.5rem'  // desktops
+                        },
                     }}
                 >
                     Mock Interview Invitation
@@ -86,19 +129,30 @@ const InvitationForm = () => {
                                     color: '#22223b',
                                     fontWeight: 600,
                                     mb: 1,
+                                    fontSize: {
+                                        xs: '0.9rem', // mobile
+                                        sm: '1rem',   // tablet
+                                        md: '1.1rem'  // desktop
+                                    },
                                 }}
                             >
                                 Select Question Mode:
                             </Typography>
+
                             <ModeToggle mode={mode} setMode={setMode} />
                         </Box>
 
                         <Button
                             type="submit"
                             variant="contained"
-                            size="large"
+                            size="medium"
                             sx={{
                                 backgroundColor: 'rgb(0, 175, 181)',
+                                fontSize: {
+                                    xs: '0.9rem', // mobile
+                                    sm: '1rem',   // tablet
+                                    md: '1.1rem'  // desktop
+                                },
                                 fontWeight: 'bold',
                                 '&:hover': {
                                     backgroundColor: 'rgb(0, 155, 160)',

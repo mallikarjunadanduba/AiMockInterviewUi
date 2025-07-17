@@ -1,13 +1,15 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { Button, Stack, Typography } from '@mui/material';
+import { uploadInterviewResponse } from '../../utilities/API/interviewApi';
 
-const RecorderControls = ({ stream, sessionId, questionData, onNext, setResponse }) => {
+const RecorderControls = ({ stream, sessionId, questionData, onNext, setResponse, setLoading }) => {
   const recorderRef = useRef(null);
   const chunks = useRef([]);
   const timerRef = useRef(null);
 
   const [isRecording, setIsRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
+  const [isUploadComplete, setIsUploadComplete] = useState(false);
 
   // Start the timer
   const startTimer = () => {
@@ -39,18 +41,22 @@ const RecorderControls = ({ stream, sessionId, questionData, onNext, setResponse
       formData.append('question', questionData.text);
       formData.append('video', blob);
 
-      const res = await fetch('/upload_response', {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await res.json();
-      setResponse(data);
-      onNext();
+      setLoading(true);
+      try {
+        const data = await uploadInterviewResponse(formData);
+        setResponse(data);
+        setIsUploadComplete(true); // Enable "Next" button
+      } catch (err) {
+        console.error("Upload failed:", err);
+        setResponse({ error: "Upload failed" });
+      }
+      setLoading(false);
     };
 
     recorderRef.current = recorder;
     recorder.start();
     setIsRecording(true);
+    setIsUploadComplete(false);
     startTimer();
   };
 
@@ -62,7 +68,7 @@ const RecorderControls = ({ stream, sessionId, questionData, onNext, setResponse
   };
 
   return (
-    <Stack direction="row" spacing={2} alignItems="center">
+    <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
       {!isRecording ? (
         <Button onClick={startRecording} variant="contained" color="success">
           🎥 Start Recording
@@ -76,6 +82,12 @@ const RecorderControls = ({ stream, sessionId, questionData, onNext, setResponse
             ⏱ {String(Math.floor(seconds / 60)).padStart(2, '0')}:{String(seconds % 60).padStart(2, '0')}
           </Typography>
         </>
+      )}
+
+      {isUploadComplete && (
+        <Button onClick={onNext} variant="outlined" color="primary">
+          👉 Next Question
+        </Button>
       )}
     </Stack>
   );

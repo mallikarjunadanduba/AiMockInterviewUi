@@ -12,6 +12,8 @@ import VideoPreview from '../components/Interview/VideoPreview';
 import QuestionDisplay from '../components/Interview/QuestionDisplay';
 import RecorderControls from '../components/Interview/RecorderControls';
 import TranscriptResult from '../components/Interview/TranscriptResult';
+import { fetchInterviewSession, fetchDynamicQuestion } from '../utilities/API/interviewApi';
+import { uploadResume } from '../utilities/API/resumeApi';
 
 const InterviewSession = () => {
     const { sessionId } = useParams();
@@ -21,27 +23,30 @@ const InterviewSession = () => {
     const [questions, setQuestions] = useState({});
     const [response, setResponse] = useState(null);
     const [reportLink, setReportLink] = useState('');
+    const [gifKey, setGifKey] = useState(Date.now());
+    const [loading, setLoading] = useState(false);
+
 
     const currentQIndex = useRef(0);
     const currentCIndex = useRef(0);
 
     useEffect(() => {
-        const mockData = {
-            question_mode: 'predefined',
-            questions: {
-                Behavioral: [
-                    'Describe a time you had a conflict at work and how you resolved it.',
-                    'What’s your biggest strength?',
-                ],
-                Technical: [
-                    'What is a closure in JavaScript?',
-                    'Explain useEffect hook in React.',
-                ],
-            },
+        const loadSession = async () => {
+            try {
+                const data = await fetchInterviewSession(sessionId);
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                setMode(data.question_mode || 'predefined');
+                setQuestions(data.questions || {});
+            } catch (err) {
+                console.error("Failed to load interview session", err);
+            }
         };
-        setMode(mockData.question_mode);
-        setQuestions(mockData.questions);
-    }, []);
+
+        loadSession();
+    }, [sessionId]);
 
     useEffect(() => {
         async function initCamera() {
@@ -55,10 +60,24 @@ const InterviewSession = () => {
         initCamera();
     }, []);
 
-    const getDynamicQuestion = async () => {
-        const res = await fetch(`/get_dynamic_question/${sessionId}`);
-        const data = await res.json();
-        setQuestionData({ category: 'AI', text: data.question || 'Tell me about yourself.' });
+    const refreshGif = () => {
+        setGifKey(Date.now());
+    };
+
+    const speak = (text) => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        const voices = window.speechSynthesis.getVoices();
+        const femaleVoice = voices.find(
+            (v) =>
+                v.lang.startsWith("en") &&
+                (v.name.toLowerCase().includes("female") ||
+                    v.name.toLowerCase().includes("samantha") ||
+                    v.name.toLowerCase().includes("zira") ||
+                    v.name.toLowerCase().includes("google us"))
+        );
+        if (femaleVoice) utterance.voice = femaleVoice;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
     };
 
     const getPredefinedQuestion = () => {
@@ -66,10 +85,26 @@ const InterviewSession = () => {
         const currentCategory = categories[currentCIndex.current];
         const list = questions[currentCategory];
         const text = list[currentQIndex.current];
+        speak(text);
         setQuestionData({ category: currentCategory, text });
+        refreshGif();
+    };
+
+    const getDynamicQuestion = async () => {
+        try {
+            const data = await fetchDynamicQuestion(sessionId);
+            const question = data.question || 'Tell me about yourself.';
+            speak(question);
+            setQuestionData({ category: 'AI', text: question });
+            refreshGif();
+        } catch (error) {
+            console.error("Error loading dynamic question", error);
+            setQuestionData({ category: 'AI', text: '⚠️ Failed to load dynamic question.' });
+        }
     };
 
     const loadNextQuestion = async () => {
+        setResponse(null); // 👈 Reset to trigger "Processing..." message
         if (mode === 'predefined') {
             const categories = Object.keys(questions);
             const currentCategory = categories[currentCIndex.current];
@@ -83,7 +118,7 @@ const InterviewSession = () => {
                 getPredefinedQuestion();
             } else {
                 setQuestionData({ category: '', text: '✅ Interview Completed!' });
-                setReportLink(`/final_report/${sessionId}`);
+                setReportLink(`/finalreport/${sessionId}`);
                 stopStream();
             }
         } else {
@@ -104,6 +139,29 @@ const InterviewSession = () => {
             getDynamicQuestion();
         }
     }, [questions, mode]);
+
+    const handleResumeUpload = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (file.type !== 'application/pdf') {
+            alert("Please upload a PDF file.");
+            return;
+        }
+
+        try {
+            const result = await uploadResume(file);
+            console.log("Resume uploaded successfully:", result);
+            setResponse((prev) => ({
+                ...prev,
+                resume_summary: result.summary || 'Resume processed successfully!',
+            }));
+        } catch (error) {
+            console.error("Resume upload failed:", error);
+            alert("Resume upload failed. Please try again.");
+        }
+    };
+
 
     return (
         <Box
@@ -150,7 +208,7 @@ const InterviewSession = () => {
                         <VideoPreview stream={mediaStream} />
                         <Box
                             component="img"
-                            src="https://miro.medium.com/v2/resize:fit:800/1*llqlfqGFKm9klLx_itWNLQ.gif"
+                            src={`https://miro.medium.com/v2/resize:fit:800/1*llqlfqGFKm9klLx_itWNLQ.gif?${gifKey}`}
                             alt="Bot"
                             sx={{
                                 width: { xs: 80, md: 120 },
@@ -172,6 +230,7 @@ const InterviewSession = () => {
                         questionData={questionData}
                         onNext={loadNextQuestion}
                         setResponse={setResponse}
+                        setLoading={setLoading}
                     />
                 </Paper>
 
@@ -190,47 +249,44 @@ const InterviewSession = () => {
                     }}
                 >
                     <Box>
-                        <QuestionDisplay category={questionData.category} question={questionData.text} />
-                        <TranscriptResult response={response} />
+                        <Box p={2} sx={{ backgroundColor: '#f1f1f1', borderRadius: 2, boxShadow: 1 }}>
+                            <Typography variant="h6" gutterBottom sx={{ color: '#007b83', fontWeight: 'bold' }}>
+                                Candidate Info
+                            </Typography>
 
-                        {reportLink && (
-                            <Stack mt={2} alignItems="center">
-                                <MuiLink href={reportLink} target="_blank" underline="hover">
-                                    📄 Download Final Report
-                                </MuiLink>
+                            <Typography variant="body2" sx={{ lineHeight: 1.8 }}>
+                                <strong>Session ID:</strong> <span style={{ color: '#333' }}>{sessionId}</span><br />
+                                <strong>Mode:</strong> <span style={{ textTransform: 'capitalize', color: '#333' }}>{mode}</span>
+                            </Typography>
+                        </Box>
+
+                        <QuestionDisplay question={questionData.text} />
+                        <TranscriptResult response={response} loading={loading} />
+
+                        {questionData.text.toLowerCase().includes('upload your resume') && (
+                            <Stack spacing={1} mt={2}>
+                                <Typography variant="body1">📄 Upload your resume (PDF)</Typography>
+                                <input type="file" accept="application/pdf" onChange={handleResumeUpload} />
                             </Stack>
                         )}
 
-                        <Typography variant="h6" gutterBottom mt={3}>
-                            📋 Instructions
-                        </Typography>
-                        <Typography variant="body2" gutterBottom>
-                            • Ensure webcam & mic are active.<br />
-                            • Click "Next" after answering.<br />
-                            • Final report available at the end.
-                        </Typography>
-
-                        <Typography variant="h6" mt={3}>
-                            🧑 Candidate Info
-                        </Typography>
-                        <Typography variant="body2">
-                            Session ID: <strong>{sessionId}</strong><br />
-                            Mode: <strong>{mode}</strong>
-                        </Typography>
+                        {reportLink && (
+                            <Stack mt={3} alignItems="center">
+                                <Button
+                                    component={Link}
+                                    to={reportLink}
+                                    variant="contained"
+                                    color="primary"
+                                >
+                                    📄 Download Final Report
+                                </Button>
+                            </Stack>
+                        )}
                     </Box>
 
-                    <Button
-                        component={Link}
-                        to="/finalreport"
-                        variant="contained"
-                        sx={{ mt: 3, alignSelf: 'center' }}
-                    >
-                        FINAL REPORT
-                    </Button>
                 </Paper>
             </Box>
         </Box>
-
     );
 };
 

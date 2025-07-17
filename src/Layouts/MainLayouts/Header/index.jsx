@@ -12,7 +12,6 @@ import {
     ListItemText,
     useTheme,
     useMediaQuery,
-    Button,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoSection from './LogoSection';
@@ -87,14 +86,6 @@ const Navbar = () => {
                                 />
                             </ListItemButton>
                         </ListItem>
-                        <Button
-                            component={Link}
-                            to="/interview"
-                            variant="contained"
-                            color="primary"
-                        >
-                            View UI
-                        </Button>
                     </List>
                 </Box>
             </Drawer>

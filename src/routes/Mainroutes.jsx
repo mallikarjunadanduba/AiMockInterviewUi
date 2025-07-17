@@ -16,9 +16,9 @@ const Mainroutes = () => {
       <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>}>
         <Routes>
           <Route path="/" element={<InvitationForm />} />
-          <Route path="/interview" element={<Navigate to="/session/test123" />} />
-          <Route path="/session/:sessionId" element={<InterviewSession />} />
-          <Route path='/finalreport' element={<FinalReport />} />
+          <Route path="/interview" element={<Navigate to="/interview/demo-session-id" />} />
+          <Route path="/interview/:sessionId" element={<InterviewSession />} />
+          <Route path="/finalreport/:sessionId" element={<FinalReport />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
