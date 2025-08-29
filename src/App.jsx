@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import Mainroutes from './routes/Mainroutes';
-import '../src/app.css'
+import "./App.css";
 
 function App() {
   return (
